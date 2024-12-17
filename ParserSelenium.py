@@ -10,101 +10,9 @@ import sqlite3
 import tkinter as tk
 import threading as td
 
-
-def CollectData(url):
-    SelConnect(url)
-    soup = BeautifulSoup(driver.page_source, "lxml")
-    data = soup.find_all("div", class_="card-previwe")
-
-    if data:
-        for el in data:
-            price = el.find("a", class_="gtm_link_to_card").get("data-price")
-            title = el.find("a", class_="gtm_link_to_card").get("data-name")
-            url = el.find("a", class_="gtm_link_to_card").get("href")
-
-            if price and title and url:
-                info = {"Цена товара": price, "Название товара": title, "Директория сайта": url}
-                result.append(info)
-
-            
-def CreateDB(name="Goods.db"):
-    global conn
-    global cursor
-
-    conn = sqlite3.connect(name)
-    cursor = conn.cursor()
-
-
-
-
-    cursor.execute('''
-    CREATE TABLE IF NOT EXISTS Shops (
-    ShopID SERIAL PRIMARY KEY,
-    Name TEXT NOT NULL,
-    Url TEXT NOT NULL
-    )
-    ''')
-
-
-    cursor.execute('''
-    CREATE TABLE IF NOT EXISTS Good (
-    GoodID SERIAL PRIMARY KEY,
-    Name TEXT NOT NULL,
-    Url TEXT NOT NULL
-    )
-    ''')
-
-    cursor.execute('''
-    CREATE TABLE IF NOT EXISTS Prices (
-    id SERIAL PRIMARY KEY,
-    GoodID INT NOT NULL,
-    ShopID INT NOT NULL,
-    Price INT NOT NULL
-    )
-    ''')
-
-    conn.commit()
-
-
-
-
-def SelConnect(site):
-    while True:
-        try:
-            driver.get(site)
-            time.sleep(0.1)  # Wait for the page to load
-            break
-        except Exception as e:
-            print(f"Error occurred: {e}, trying again after 5 seconds")
-            time.sleep(5)
-
-def ToDatabase(data, name = 'GoodsFromSite.db'):
-    conn = sqlite3.connect(name)
-    cursor = conn.cursor()
-
-    cursor.execute('''
-CREATE TABLE IF NOT EXISTS Goods (
-    id SERIAL PRIMARY KEY,
-    Title TEXT NOT NULL,
-    Price INTEGER,
-    Url TEXT NOT NULL
-)
-''')
-
-    conn.commit()
-
-
-    for element in data:
-        cursor.execute('''
-INSERT INTO Goods (Title, Price, Url) VALUES (%s, %s, %s)
-''', (element["Название товара"], element["Цена товара"],  element["Директория сайта"]))
-
-        conn.commit()
-
-
 def ParseAllDataGipermarketdom():
     
-
+    url = "https://gipermarketdom.ru/"
     SelConnect(url)
 
     soup = BeautifulSoup(driver.page_source, "lxml")
@@ -151,9 +59,150 @@ def ParseAllDataGipermarketdom():
 
     driver.quit()
 
+def ParseFromShops():
+    shops_url=[]
+    goods_url=[]
+    cursor.execute("SELECT * FROM Shops")
+    shops=cursor.fetchall()
+
+    
+
+    for el in shops:
+        shops_url.append(el[2]) #в urls помещаем ссылки на сайты из базы данных
 
 
 
+    cursor.execute("SELECT * FROM Good")
+    goods=cursor.fetchall()
+
+
+    for el in goods:
+        goods_url.append(el[2])
+
+
+    # for el in data:
+
+
+
+    for site in shops_url:
+        if site == "https://gipermarketdom.ru/":
+
+
+            CollectDataFromGipermarketdom() #НА вход метода передается юрл категории с требуемым товаром
+
+            pass
+        elif site == "https://www.vodoparad.ru/":
+            CollectDataFromVodoparad()
+
+            pass
+        else:
+            pass
+
+
+    # print(data)
+
+
+def CollectDataFromVodoparad():
+    pass
+
+
+def CollectDataFromGipermarketdom(url):
+    # url="https://gipermarketdom.ru/"
+    SelConnect(url)
+    soup = BeautifulSoup(driver.page_source, "lxml")
+    data = soup.find_all("div", class_="card-previwe")
+
+    if data:
+        for el in data:
+            price = el.find("a", class_="gtm_link_to_card").get("data-price")
+            title = el.find("a", class_="gtm_link_to_card").get("data-name")
+            url = el.find("a", class_="gtm_link_to_card").get("href")
+
+            if price and title and url:
+                info = {"Цена товара": price, "Название товара": title, "Директория сайта": url}
+                result[url].append(info)
+       
+def CreateDB(name="Goods.db"):
+    global conn
+    global cursor
+
+    conn = sqlite3.connect(name)
+    cursor = conn.cursor()
+
+
+
+
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS Shops (
+    ShopID SERIAL PRIMARY KEY,
+    Name TEXT NOT NULL,
+    Url TEXT NOT NULL
+    )
+    ''')
+
+    cursor.execute('''
+INSERT INTO Shops (Name, Url) VALUES (?, ?) ON CONFLICT(ShopID) DO NOTHING;
+''', ("gipermarketdom", "https://gipermarketdom.ru/"))
+
+
+
+    cursor.execute('''
+INSERT INTO Shops (Name, Url) VALUES (?, ?) ON CONFLICT(ShopID) DO NOTHING;
+''', ("vodoparad", "https://www.vodoparad.ru/"))
+    
+
+
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS Good (
+    GoodID SERIAL PRIMARY KEY,
+    Name TEXT NOT NULL,
+    Url TEXT NOT NULL
+    )
+    ''')
+
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS Prices (
+    id SERIAL PRIMARY KEY,
+    GoodID INT NOT NULL,
+    ShopID INT NOT NULL,
+    Price INT NOT NULL
+    )
+    ''')
+
+    conn.commit()
+
+def SelConnect(site):
+    while True:
+        try:
+            driver.get(site)
+            time.sleep(0.1)  # Wait for the page to load
+            break
+        except Exception as e:
+            print(f"Error occurred: {e}, trying again after 5 seconds")
+            time.sleep(5)
+
+def ToDatabase(data, name = 'GoodsFromSite.db'):
+    conn = sqlite3.connect(name)
+    cursor = conn.cursor()
+
+    cursor.execute('''
+CREATE TABLE IF NOT EXISTS Goods (
+    id SERIAL PRIMARY KEY,
+    Title TEXT NOT NULL,
+    Price INTEGER,
+    Url TEXT NOT NULL
+)
+''')
+
+    conn.commit()
+
+
+    for element in data:
+        cursor.execute('''
+INSERT INTO Goods (Title, Price, Url) VALUES (%s, %s, %s)
+''', (element["Название товара"], element["Цена товара"],  element["Директория сайта"]))
+
+        conn.commit()
 
 def Interface():
     def on_button_click():
@@ -165,15 +214,17 @@ def Interface():
     def get_input():
         # Получаем данные из поля ввода
 
-        cursor.execute('''
-INSERT INTO Good (Name, Url) VALUES (?, ?)
-''', (entry1.get(), entry2.get()))
+
+        if entry1.get() and entry2.get():
+            cursor.execute('''
+    INSERT INTO Good (Name, Url) VALUES (?, ?)
+    ''', (entry1.get(), entry2.get()))
 
 
-        entry1.delete(0, tk.END)
-        entry2.delete(0, tk.END)
+            entry1.delete(0, tk.END)
+            entry2.delete(0, tk.END)
 
-        conn.commit()
+            conn.commit()
 
 
         # messagebox.showinfo("Ввод", f"Вы ввели: {user_input}")  # Показываем введенные данные в 
@@ -181,25 +232,27 @@ INSERT INTO Good (Name, Url) VALUES (?, ?)
 
 
     def result():
-        frame1 = tk.Frame(root)
-        frame1.tkraise()
-
-        array=[1,2,3,4]
-
-        def display_array():
-            # Очищаем Listbox перед выводом нового содержимого
-            listbox.delete(0, tk.END)
-            
-            # Добавляем элементы массива в Listbox
-            for item in array:
-                listbox.insert(tk.END, item)
 
 
-        listbox = tk.Listbox(root)
-        listbox.pack(pady=10)
+        ParseFromShops()
 
-        display_array()
 
+        window = tk.Tk()
+
+        window.title("Результаты парсинга")
+
+
+        result=""
+
+        label = tk.Label(window, text=result)
+        label.pack()
+
+
+
+        
+
+
+        
 
 
 
@@ -238,8 +291,9 @@ INSERT INTO Good (Name, Url) VALUES (?, ?)
 
 
 
-url = "https://gipermarketdom.ru/"
-result = []
+# url = "https://gipermarketdom.ru/"
+# url2="https://www.vodoparad.ru/"
+result = {"https://gipermarketdom.ru/":[], "https://www.vodoparad.ru/":[]}
 
 # Set up Selenium with Chrome
 chrome_options = Options()
@@ -256,63 +310,3 @@ CreateDB()
 
 Interface()
 
-
-
-
-
-
-
-# while True:
-#     try:
-#         driver.get(url)
-#         time.sleep(1)
-#         # time.sleep(5)  # Wait for the page to load
-#         break
-#     except Exception as e:
-#         print(f"Error occurred: {e}, trying again after 5 seconds")
-#         time.sleep(5)
-
-# print(driver.page_source)
-
-# Wait for the element to be present
-# try:
-#     element = WebDriverWait(driver, 10).until(
-#         EC.presence_of_element_located((By.CSS_SELECTOR, 'li.list-parent.menu-parent-top'))
-#     )
-# except Exception as e:
-#     print(f"Error finding element: {e}")
-#     driver.quit()
-#     exit()
-
-
-    # if data:
-    #     price = data.find("a", class_="gtm_link_to_card").get("data-price")
-    #     title = data.find("a", class_="gtm_link_to_card").get("data-name")
-    #     url = data.find("a", class_="gtm_link_to_card").get("href")
-
-        # if price and title and url:
-        #     info = {"Цена товара": price, "Название товара": title, "Директория сайта": url}
-        #     result.append(info)
-
-        # info = {"Цена товара": price, "Название товара": title, "Директория сайта": url}
-        # result.append(info)
-        # else:
-
-        #     title=data.find("div", class_="price").find("a")
-        #     url=data.find("div", class_="price").find("a")
-
-        #     if title and url:
-        #         title=data.find("div", class_="price").find("a").get("data-name")
-        #         url=data.find("div", class_="price").find("a").get("href")
-        #     else:
-        #         title=data.find("div", class_="price").find("span")
-        #         url=data.find("div", class_="price").find("a").get("href")
-
-            
-
-        #     # title=data.find("div", class_="price").find("a").get("data-name")
-        #     # url=data.find("div", class_="price").find("a").get("href")
-
-        #     if title and url:
-        #         info = {"Цена товара": "На данный момент товара нет в наличии", "Название товара": title, "Директория сайта": url}
-        #         result.append(info)
