@@ -2,13 +2,46 @@ from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from bs4 import BeautifulSoup
+
 import time
 import sqlite3
 import tkinter as tk
 import threading as td
+
+
+def DomSearch(name):
+    SelConnect("https://gipermarketdom.ru/")
+
+    search_box = driver.find_element(By.ID, 'title-search-input')
+
+    search_box.send_keys(name)
+
+    search_box.send_keys(Keys.RETURN)
+
+    time.sleep(5)
+    
+    results = driver.find_elements(By.CLASS_NAME, 'digi-product__main')
+
+    return results
+
+def VodSearch(name):
+    SelConnect("https://www.vodoparad.ru/")
+
+    search_box = driver.find_element(By.ID, 'art-search-input')
+
+    search_box.send_keys(name)
+
+    search_box.send_keys(Keys.RETURN)
+
+    time.sleep(5)
+    
+    results = driver.find_elements(By.CLASS_NAME, 'product-item product-item--fix-height')
+
+    return results
 
 def ParseAllDataGipermarketdom():
     
@@ -51,24 +84,26 @@ def ParseAllDataGipermarketdom():
                 num=page.contents
                 postfix=f"?page={num}&ff&sort_price=&in_stock=0&price_from=&price_to="
 
-                CollectData(site+postfix)
+                CollectDataFromGipermarketdom(site+postfix)
         else:
-            CollectData(site)
+            CollectDataFromGipermarketdom(site)
 
     ToDatabase(result)
+
+    
 
     driver.quit()
 
 def ParseFromShops():
-    shops_url=[]
-    goods_url=[]
-    cursor.execute("SELECT * FROM Shops")
-    shops=cursor.fetchall()
+    # shops_url=[]
+    # goods_url=[]
+    # cursor.execute("SELECT * FROM Shops")
+    # shops=cursor.fetchall()
 
     
 
-    for el in shops:
-        shops_url.append(el[2]) #в urls помещаем ссылки на сайты из базы данных
+    # for el in shops:
+    #     shops_url.append(el[2]) #в urls помещаем ссылки на сайты из базы данных
 
 
 
@@ -77,34 +112,56 @@ def ParseFromShops():
 
 
     for el in goods:
-        goods_url.append(el[2])
 
-
-    # for el in data:
+        fd = DomSearch(el[2])
 
 
 
-    for site in shops_url:
-        if site == "https://gipermarketdom.ru/":
+        for el in fd:
+
+            soup= BeautifulSoup(el.get_attribute("innerHTML"), "lxml")
+            print(soup)
+
+        
+            # soup= BeautifulSoup(el.text, "lxml")
+            
+            # price = soup.find("span", class_="digi-product-price-variant digi-product-price-variant_actual").contents
+            # title = soup.find("a", class_="digi-product__label").text
+            # url = soup.find("a", class_="digi-product__button").get("href")
+
+            price = el.find_element(By.CLASS_NAME, "digi-product-price-variant digi-product-price-variant_actual").get_attribute("innerHTML")
+            title = el.find_element(By.CLASS_NAME, "digi-product__label").get_attribute("innerHTML")
+            url = el.find_element(By.CLASS_NAME, "digi-product__button").get_attribute("href")
 
 
-            CollectDataFromGipermarketdom() #НА вход метода передается юрл категории с требуемым товаром
+            if price and title and url:
+            
+                info = {"Цена товара": price, "Название товара": title, "Директория сайта": url}
 
-            pass
-        elif site == "https://www.vodoparad.ru/":
-            CollectDataFromVodoparad()
+                result["https://gipermarketdom.ru/"].append(info)
 
-            pass
-        else:
-            pass
+        fv = VodSearch(el[2])
+        
+        for el in fd:
+            # soup= BeautifulSoup(el.text, "lxml")
+            
+            # price = soup.find("p", class_="product-item__price-new").find("span").contents[0]
+            # title = soup.find("a", class_="product-item__name").text
+            # url = soup.find("a", class_="product-item__name").get("href")
 
 
-    # print(data)
+            price = el.find_element(By.CLASS_NAME, "product-item__price-new").find_element(By.CSS_SELECTOR, "span").get_attribute("innerHTML")
+            title = el.find_element(By.CLASS_NAME, "product-item__name").get_attribute("innerHTML")
+            url = el.find_element(By.CLASS_NAME, "product-item__name").get_attribute("href")
 
+            if price and title and url:
+            
+                info = {"Цена товара": price, "Название товара": title, "Директория сайта": url}
+
+                result["https://gipermarketdom.ru/"].append(info)
 
 def CollectDataFromVodoparad():
     pass
-
 
 def CollectDataFromGipermarketdom(url):
     # url="https://gipermarketdom.ru/"
@@ -120,7 +177,7 @@ def CollectDataFromGipermarketdom(url):
 
             if price and title and url:
                 info = {"Цена товара": price, "Название товара": title, "Директория сайта": url}
-                result[url].append(info)
+                result["https://gipermarketdom.ru/"].append(info)
        
 def CreateDB(name="Goods.db"):
     global conn
@@ -210,7 +267,6 @@ def Interface():
         thread1=td.Thread(target=ParseAllDataGipermarketdom)
         thread1.start()
 
-
     def get_input():
         # Получаем данные из поля ввода
 
@@ -229,32 +285,25 @@ def Interface():
 
         # messagebox.showinfo("Ввод", f"Вы ввели: {user_input}")  # Показываем введенные данные в 
 
-
-
-    def result():
-
-
-        ParseFromShops()
-
+    def MakeNewWindow(title="Результаты парсинга"):
+        result="Подождите, производится парсинг"
 
         window = tk.Tk()
 
-        window.title("Результаты парсинга")
-
-
-        result=""
+        window.title(title)
 
         label = tk.Label(window, text=result)
         label.pack()
 
+        window.mainloop()
 
+    def result():
 
-        
+        thread = td.Thread(target=MakeNewWindow)
 
+        thread.start()
 
-        
-
-
+        ParseFromShops()
 
     root = tk.Tk()
     root.title("Парсер сайта")
