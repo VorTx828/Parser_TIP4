@@ -31,7 +31,11 @@ def DomSearch(name):
 def VodSearch(name):
     SelConnect("https://www.vodoparad.ru/")
 
-    search_box = driver.find_element(By.ID, 'art-search-input')
+    # search_box = driver.find_element(By.ID, 'art-search-input')
+
+    search_box = WebDriverWait(driver, 10).until(
+        EC.visibility_of_element_located((By.ID, 'art-search-input'))
+    )
 
     search_box.send_keys(name)
 
@@ -111,9 +115,9 @@ def ParseFromShops():
     goods=cursor.fetchall()
 
 
-    for el in goods:
+    for g in goods:
 
-        fd = DomSearch(el[2])
+        fd = DomSearch(g[1])
 
 
 
@@ -129,7 +133,7 @@ def ParseFromShops():
             # title = soup.find("a", class_="digi-product__label").text
             # url = soup.find("a", class_="digi-product__button").get("href")
 
-            price = el.find_element(By.CLASS_NAME, "digi-product-price-variant digi-product-price-variant_actual").get_attribute("innerHTML")
+            price = el.find_element(By.CLASS_NAME, "digi-product-price-variant").get_attribute("innerHTML")
             title = el.find_element(By.CLASS_NAME, "digi-product__label").get_attribute("innerHTML")
             url = el.find_element(By.CLASS_NAME, "digi-product__button").get_attribute("href")
 
@@ -140,9 +144,9 @@ def ParseFromShops():
 
                 result["https://gipermarketdom.ru/"].append(info)
 
-        fv = VodSearch(el[2])
+        fv = VodSearch(g[1])
         
-        for el in fd:
+        for el in fv:
             # soup= BeautifulSoup(el.text, "lxml")
             
             # price = soup.find("p", class_="product-item__price-new").find("span").contents[0]
@@ -191,7 +195,7 @@ def CreateDB(name="Goods.db"):
 
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS Shops (
-    ShopID SERIAL PRIMARY KEY,
+    ShopID SERIAL PRIMARY KEY AUTOINCREMENT,
     Name TEXT NOT NULL,
     Url TEXT NOT NULL
     )
@@ -211,7 +215,7 @@ INSERT INTO Shops (Name, Url) VALUES (?, ?) ON CONFLICT(ShopID) DO NOTHING;
 
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS Good (
-    GoodID SERIAL PRIMARY KEY,
+    GoodID SERIAL PRIMARY KEY AUTOINCREMENT,
     Name TEXT NOT NULL,
     Url TEXT NOT NULL
     )
@@ -219,10 +223,12 @@ INSERT INTO Shops (Name, Url) VALUES (?, ?) ON CONFLICT(ShopID) DO NOTHING;
 
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS Prices (
-    id SERIAL PRIMARY KEY,
-    GoodID INT NOT NULL,
+    ID SERIAL PRIMARY KEY AUTOINCREMENT,
+    GoodCategoryID INT NOT NULL,
     ShopID INT NOT NULL,
-    Price INT NOT NULL
+    Name TEXT NOT NULL,
+    Price INT NOT NULL,
+    CardUrl TEXT NOT NULL
     )
     ''')
 
@@ -336,7 +342,27 @@ def Interface():
 
     root.mainloop()
 
+def ResultToDB():
 
+    # cursor.execute("SELECT * FROM Good")
+    # g=cursor.fetchall()
+
+    # r={}
+
+    # for i in g:
+    #     r[i[1]]=i[2]
+    
+    for el in result["https://gipermarketdom.ru/"]:
+        cursor.execute('''
+    INSERT INTO Prices (GoodCategoryID, ShopID, Name, Price, CardUrl) VALUES (?, ?, ?, ?, ?) ON CONFLICT(ID) DO NOTHING;
+    ''', (1, 1, el["Название товара"], el["Цена товара"], el["Директория сайта"]))
+        conn.commit()
+
+    for el in result["https://www.vodoparad.ru/"]:
+        cursor.execute('''
+    INSERT INTO Prices (GoodCategoryID, ShopID, Name, Price, CardUrl) VALUES (?, ?, ?, ?, ?) ON CONFLICT(ID) DO NOTHING;
+    ''', (1, 2, el["Название товара"], el["Цена товара"], el["Директория сайта"]))
+        conn.commit()
 
 
 
