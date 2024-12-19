@@ -9,8 +9,8 @@ from bs4 import BeautifulSoup
 import os
 
 # Кажется, у Славы работает только с этим импортом. У Тихона работает без него
-if os.path.exists('C:\\Program Files\\ChromeDriver\\chromedriver-win64\\chromedriver.exe'):
-    from seleniumwire import webdriver
+# if os.path.exists('C:\\Program Files\\ChromeDriver\\chromedriver-win64\\chromedriver.exe'):
+#     from seleniumwire import webdriver
 
 import time
 import sqlite3
@@ -30,7 +30,6 @@ def interceptor(request):
     # request.headers["Sec-Ch-Ua"] = "\"Chromium\";v=\"122\", \"Not(A:Brand\";v=\"24\", \"Google Chrome\";v=\"122\""
     request.headers["Sec-Fetch-Site"] = "cross-site"
     request.headers["Accept-Encoding"] = "gzip, deflate, br, zstd"
-
 
 def DomSearch(name):
     SelConnect("https://gipermarketdom.ru/")
@@ -58,13 +57,34 @@ def VodSearch(name):
         EC.visibility_of_element_located((By.ID, 'art-search-input'))
     )
 
+    results=[]
+
     search_box.send_keys(name)
 
     search_box.send_keys(Keys.RETURN)
 
     time.sleep(5)
+
+    navbar = driver.find_element(By.CSS_SELECTOR, "ul")
+
+    if navbar:
+        lt = navbar.find_elements(By.CSS_SELECTOR, "li") # массив элементова поиска
+        max = int(lt[-2].find_element(By.CSS_SELECTOR, "a").get_attribute("innerHTML"))
+
+        # elements = driver.find_elements(By.CLASS_NAME, "product-item__content")
+
+        # for el in elements:
+        #     results.append(el)
     
-    results = driver.find_elements(By.CLASS_NAME, 'product-item')
+        for i in range(max-1):
+            elements = driver.find_elements(By.CLASS_NAME, "product-item__content")
+
+            for el in elements:
+                results.append(el)
+
+            els = driver.find_element(By.CSS_SELECTOR, "ul").find_elements(By.CSS_SELECTOR, "li")[-1].find_element(By.CSS_SELECTOR, "a").get_attribute("href") #следующая ссылка
+            SelConnect(els)
+            
 
     return results
 
@@ -145,7 +165,7 @@ def ParseFromShops():
         for el in fd:
 
             soup= BeautifulSoup(el.get_attribute("innerHTML"), "lxml")
-            # print(soup)
+            print(soup)
 
         
             # soup= BeautifulSoup(el.text, "lxml")
