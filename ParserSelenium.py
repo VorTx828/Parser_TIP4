@@ -7,10 +7,26 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from bs4 import BeautifulSoup
 
+from seleniumwire import webdriver
+
 import time
 import sqlite3
 import tkinter as tk
 import threading as td
+
+
+def interceptor(request):
+    del request.headers["User-Agent"]
+    del request.headers["Sec-Ch-Ua"]
+    del request.headers["Sec-Fetch-Site"]
+    del request.headers["Accept-Encoding"]
+
+
+
+    request.headers["User-Agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 YaBrowser/24.7.0.0 Safari/537.36"
+    # request.headers["Sec-Ch-Ua"] = "\"Chromium\";v=\"122\", \"Not(A:Brand\";v=\"24\", \"Google Chrome\";v=\"122\""
+    request.headers["Sec-Fetch-Site"] = "cross-site"
+    request.headers["Accept-Encoding"] = "gzip, deflate, br, zstd"
 
 
 def DomSearch(name):
@@ -43,7 +59,7 @@ def VodSearch(name):
 
     time.sleep(5)
     
-    results = driver.find_elements(By.CLASS_NAME, 'product-item product-item--fix-height')
+    results = driver.find_elements(By.CLASS_NAME, 'product-item')
 
     return results
 
@@ -164,9 +180,6 @@ def ParseFromShops():
 
                 result["https://gipermarketdom.ru/"].append(info)
 
-def CollectDataFromVodoparad():
-    pass
-
 def CollectDataFromGipermarketdom(url):
     # url="https://gipermarketdom.ru/"
     SelConnect(url)
@@ -277,7 +290,7 @@ def Interface():
         # Получаем данные из поля ввода
 
 
-        if entry1.get() and entry2.get():
+        if entry1.get():
             cursor.execute('''
     INSERT INTO Good (Name, Url) VALUES (?, ?)
     ''', (entry1.get(), entry2.get()))
@@ -354,13 +367,13 @@ def ResultToDB():
     
     for el in result["https://gipermarketdom.ru/"]:
         cursor.execute('''
-    INSERT INTO Prices (GoodCategoryID, ShopID, Name, Price, CardUrl) VALUES (?, ?, ?, ?, ?) ON CONFLICT(ID) DO NOTHING;
+    INSERT INTO Prices (GoodCategoryID, ShopID, Name, Price, CardUrl) VALUES (?, ?, ?, ?, ?) ON CONFLICT(GoodCategoryIDD) DO NOTHING;
     ''', (1, 1, el["Название товара"], el["Цена товара"], el["Директория сайта"]))
         conn.commit()
 
     for el in result["https://www.vodoparad.ru/"]:
         cursor.execute('''
-    INSERT INTO Prices (GoodCategoryID, ShopID, Name, Price, CardUrl) VALUES (?, ?, ?, ?, ?) ON CONFLICT(ID) DO NOTHING;
+    INSERT INTO Prices (GoodCategoryID, ShopID, Name, Price, CardUrl) VALUES (?, ?, ?, ?, ?) ON CONFLICT(GoodCategoryID) DO NOTHING;
     ''', (1, 2, el["Название товара"], el["Цена товара"], el["Директория сайта"]))
         conn.commit()
 
@@ -378,6 +391,7 @@ chrome_service = Service('C:\\Program Files\\ChromeDriver\\chromedriver-win64\\c
 chrome_options.binary_location = "C:\\Program Files\\ChromeDriver\\chrome-win64\\chrome.exe"
 driver = webdriver.Chrome(service=chrome_service, options=chrome_options)
 
+driver.request_interceptor = interceptor
 
 
 
