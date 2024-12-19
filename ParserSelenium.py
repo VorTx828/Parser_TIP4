@@ -6,8 +6,11 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from bs4 import BeautifulSoup
+import os
 
-from seleniumwire import webdriver
+# Кажется, у Славы работает только с этим импортом. У Тихона работает без него
+if os.path.exists('C:\\Program Files\\ChromeDriver\\chromedriver-win64\\chromedriver.exe'):
+    from seleniumwire import webdriver
 
 import time
 import sqlite3
@@ -48,8 +51,10 @@ def VodSearch(name):
     SelConnect("https://www.vodoparad.ru/")
 
     # search_box = driver.find_element(By.ID, 'art-search-input')
-
-    search_box = WebDriverWait(driver, 10).until(
+    # print(driver.page_source)
+    with open("test.txt", "w") as file:
+        file.write(driver.page_source)
+    search_box = WebDriverWait(driver, 50).until(
         EC.visibility_of_element_located((By.ID, 'art-search-input'))
     )
 
@@ -140,7 +145,7 @@ def ParseFromShops():
         for el in fd:
 
             soup= BeautifulSoup(el.get_attribute("innerHTML"), "lxml")
-            print(soup)
+            # print(soup)
 
         
             # soup= BeautifulSoup(el.text, "lxml")
@@ -383,16 +388,26 @@ def ResultToDB():
 # url2="https://www.vodoparad.ru/"
 result = {"https://gipermarketdom.ru/":[], "https://www.vodoparad.ru/":[]}
 
-# Set up Selenium with Chrome
-chrome_options = Options()
-# chrome_options.add_argument("--headless")  # Run in headless mode
-chrome_options.add_argument("--disable-extensions")
-chrome_service = Service('C:\\Program Files\\ChromeDriver\\chromedriver-win64\\chromedriver.exe')  # Update with your path to chromedriver
-chrome_options.binary_location = "C:\\Program Files\\ChromeDriver\\chrome-win64\\chrome.exe"
-driver = webdriver.Chrome(service=chrome_service, options=chrome_options)
+# Слава
+if os.path.exists('C:\\Program Files\\ChromeDriver\\chromedriver-win64\\chromedriver.exe'):
+    # Set up Selenium with Chrome
+    chrome_options = Options()
+    # chrome_options.add_argument("--headless")  # Run in headless mode
+    chrome_options.add_argument("--disable-extensions")
+    chrome_service = Service('C:\\Program Files\\ChromeDriver\\chromedriver-win64\\chromedriver.exe')  # Update with your path to chromedriver
+    chrome_options.binary_location = "C:\\Program Files\\ChromeDriver\\chrome-win64\\chrome.exe"
+    driver = webdriver.Chrome(service=chrome_service, options=chrome_options)
+# Тихон
+elif os.path.exists('C:\\Program Files (x86)\\Microsoft\\WebDriver\\msedgedriver.exe'):
+    edge_options = webdriver.EdgeOptions()
+    edge_service = webdriver.EdgeService('C:\\Program Files (x86)\\Microsoft\\WebDriver\\msedgedriver.exe')  # Update with your path to chromedriver
+    edge_options.binary_location = "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe"
+    driver = webdriver.Edge(service=edge_service, options=edge_options)
+else:
+    print("Для вас не было настроено открывание браузера :(")
 
 driver.request_interceptor = interceptor
-
+driver.maximize_window()
 
 
 CreateDB()
