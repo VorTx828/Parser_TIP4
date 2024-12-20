@@ -190,6 +190,13 @@ def Interface():
         def display(arr):
             return f"GoodID: {str(arr[0])}, Price: {str(arr[1])}, Title: {str(arr[2])}, Url: {str(arr[3])}"
 
+        def on_click():
+                selected_index = listbox.curselection()
+                if selected_index: 
+                    selected_value = listbox.get(selected_index)
+                    r = selected_value.split("Url: ")[-1]
+                    SelConnect(r)
+
         def display_array(mylistbox):
             # Очищаем Listbox перед добавлением новых данных  res[""]=[{},{}]    s=[ [ [],[],[] ],[ [],[] ] ]
             mylistbox.delete(0, tk.END)
@@ -212,7 +219,7 @@ def Interface():
 
         window = tk.Tk()
 
-        r = "Полученные результаты парсинга"
+        r = "Полученные результаты парсинга (с минимальными ценами)"
 
         window.title(title)
 
@@ -224,6 +231,10 @@ def Interface():
         listbox.pack(pady=20)
 
         display_array(listbox)
+
+
+        button = tk.Button(window, text="Перейти к выбранному элементу", command=on_click)
+        button.pack(pady=20)
 
         window.mainloop()
 
