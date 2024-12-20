@@ -17,6 +17,7 @@ import sqlite3
 import tkinter as tk
 import threading as td
 
+import time
 
 
 def interceptor(request):
@@ -45,7 +46,7 @@ def DomSearch(url):
 
     if price and title:
     
-        info = {"Айди товара": url[0], "Цена товара": int(price), "Название товара": title, "Директория сайта": url[2]}
+        info = {"Айди товара": url[0], "Цена товара": int(price), "Название товара": title, "Дата": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),"Директория сайта": url[2]}
 
         result["https://gipermarketdom.ru/"].append(info)
     
@@ -67,7 +68,7 @@ def VodSearch(url):
         price=int("".join(ar[:2]))
 
 
-        info = {"Айди товара": url[0], "Цена товара": price, "Название товара": title, "Директория сайта": url[3]}
+        info = {"Айди товара": url[0], "Цена товара": price, "Название товара": title, "Дата": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), "Директория сайта": url[3]}
 
         result["https://www.vodoparad.ru/"].append(info)    
 
@@ -134,6 +135,7 @@ INSERT INTO Shops (ShopID, Name, Url) VALUES (?, ?, ?) ON CONFLICT(ShopID) DO NO
     Name TEXT NOT NULL,
     Price INTEGER NOT NULL,
     CardUrl TEXT NOT NULL,
+    DateTime TEXT NOT NULL,
     UNIQUE (GoodID, ShopID)
     )
     ''')
@@ -188,7 +190,7 @@ def Interface():
 
     def MakeNewWindow(title="Результаты парсинга"):
         def display(arr):
-            return f"GoodID: {str(arr[0])}, Price: {str(arr[1])}, Title: {str(arr[2])}, Url: {str(arr[3])}"
+            return f"GoodID: {str(arr[0])}, Price: {str(arr[1])}, Title: {str(arr[2])}, Time: {str(arr[3])}, Url: {str(arr[4])}"
 
         def on_click():
                 selected_index = listbox.curselection()
@@ -242,7 +244,11 @@ def Interface():
 
         ParseFromShops()
 
-        MakeNewWindow()
+        th=td.Thread(target=MakeNewWindow)
+
+        th.start()
+
+        # MakeNewWindow()
 
         ResultToDB()
 
@@ -290,14 +296,14 @@ def ResultToDB():
     
     for el in result["https://gipermarketdom.ru/"]:
         cursor.execute('''
-    INSERT INTO Prices (GoodID, ShopID, Name, Price, CardUrl) VALUES (?, ?, ?, ?, ?);
-    ''', (el["Айди товара"], 1, el["Название товара"], el["Цена товара"], el["Директория сайта"]))
+    INSERT INTO Prices (GoodID, ShopID, Name, Price, CardUrl, DateTime) VALUES (?, ?, ?, ?, ?, ?);
+    ''', (el["Айди товара"], 1, el["Название товара"], el["Цена товара"], el["Директория сайта"], el["Дата"]))
         conn.commit()
 
     for el in result["https://www.vodoparad.ru/"]:
         cursor.execute('''
-    INSERT INTO Prices (GoodID, ShopID, Name, Price, CardUrl) VALUES (?, ?, ?, ?, ?);
-    ''', (el["Айди товара"], 2, el["Название товара"], el["Цена товара"], el["Директория сайта"]))
+    INSERT INTO Prices (GoodID, ShopID, Name, Price, CardUrl, DateTime) VALUES (?, ?, ?, ?, ?, ?);
+    ''', (el["Айди товара"], 2, el["Название товара"], el["Цена товара"], el["Директория сайта"], el["Дата"]))
         conn.commit()
 
 
