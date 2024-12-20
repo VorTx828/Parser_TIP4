@@ -186,42 +186,53 @@ def Interface():
         # messagebox.showinfo("Ввод", f"Вы ввели: {user_input}")  # Показываем введенные данные в 
 
     def MakeNewWindow(title="Результаты парсинга"):
-        result="Подождите, производится парсинг"
+
+        def Res():
+            global r
+            r = "Полученные результаты парсинга"
+            listbox = tk.Listbox(window, width=30, height=10)
+            listbox.pack(pady=20)
+            listbox1 = tk.Listbox(window, width=30, height=10)
+            listbox1.pack(pady=20)
+
+            while True:
+
+
+
+                def display_array(array, mylistbox):
+                    # Очищаем Listbox перед добавлением новых данных
+                    mylistbox.delete(0, tk.END)
+                    u=[]
+                    for dic in array:
+                        for key in dic:
+                            u.append(dic[key])
+                        mylistbox.insert(tk.END, ' '.join(map(str, u)))
+
+                display_array(result["https://gipermarketdom.ru/"], listbox)
+                display_array(result["https://www.vodoparad.ru/"], listbox1)
+
+                time.sleep(5)
+
+
+        
+
+
+        r="Подождите, производится парсинг"
 
         window = tk.Tk()
 
         window.title(title)
 
-        label = tk.Label(window, text=result)
+        label = tk.Label(window, text=r)
         label.pack()
 
-        if IsDone:
+        th=td.Thread(target=Res)
 
-            result= "Полученные результаты парсинга"
-
-
-            def display_array(array, listbox):
-                # Очищаем Listbox перед добавлением новых данных
-                listbox.delete(0, tk.END)
-                
-                for dic in array:
-                    for key in dic:
-                    # Преобразуем каждую строку массива в строку текста и добавляем в Listbox
-                        listbox.insert(tk.END, ' '.join(map(str, dic[key])))
-            
-            listbox = tk.Listbox(root, width=30, height=10)
-            listbox.pack(pady=20)
-
-            display_array(result["https://gipermarketdom.ru/"], listbox)
-
-            listbox1 = tk.Listbox(root, width=30, height=10)
-            listbox1.pack(pady=20)
-
-            display_array(result["https://www.vodoparad.ru/"], listbox1)
+        th.start()
 
         window.mainloop()
 
-    def result():
+    def Button():
 
         thread = td.Thread(target=MakeNewWindow)
 
@@ -256,7 +267,7 @@ def Interface():
     button = tk.Button(root, text="Добавить название товара и ссылку", command=get_input)
     button.pack(pady=10)
 
-    button = tk.Button(root, text="Перейти к результатам", command=result)
+    button = tk.Button(root, text="Перейти к результатам", command=Button)
     button.pack(pady=10)
 
 
