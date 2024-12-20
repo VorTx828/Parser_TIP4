@@ -133,7 +133,8 @@ INSERT INTO Shops (ShopID, Name, Url) VALUES (?, ?, ?) ON CONFLICT(ShopID) DO NO
     ShopID INTEGER NOT NULL,
     Name TEXT NOT NULL,
     Price INTEGER NOT NULL,
-    CardUrl TEXT NOT NULL
+    CardUrl TEXT NOT NULL,
+    UNIQUE (GoodID, ShopID)
     )
     ''')
 
@@ -153,13 +154,13 @@ def ResultToDB():
     
     for el in result["https://gipermarketdom.ru/"]:
         cursor.execute('''
-    INSERT INTO Prices (GoodCategoryID, ShopID, Name, Price, CardUrl) VALUES (?, ?, ?, ?, ?);
+    INSERT INTO Prices (GoodCategoryID, ShopID, Name, Price, CardUrl) VALUES (?, ?, ?, ?, ?) ON CONFLICT (GoodCategoryID, ShopID) DO NOTHING;
     ''', (el["Айди товара"], 1, el["Название товара"], el["Цена товара"], el["Директория сайта"]))
         conn.commit()
 
     for el in result["https://www.vodoparad.ru/"]:
         cursor.execute('''
-    INSERT INTO Prices (GoodCategoryID, ShopID, Name, Price, CardUrl) VALUES (?, ?, ?, ?, ?);
+    INSERT INTO Prices (GoodCategoryID, ShopID, Name, Price, CardUrl) VALUES (?, ?, ?, ?, ?) ON CONFLICT (GoodCategoryID, ShopID) DO NOTHING;
     ''', (el["Айди товара"], 2, el["Название товара"], el["Цена товара"], el["Директория сайта"]))
         conn.commit()
 
