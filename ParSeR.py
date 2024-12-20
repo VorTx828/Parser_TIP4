@@ -186,59 +186,51 @@ def Interface():
         # messagebox.showinfo("Ввод", f"Вы ввели: {user_input}")  # Показываем введенные данные в 
 
     def MakeNewWindow(title="Результаты парсинга"):
+        def display(arr):
+            return f"GoodID: {str(arr[0])}, Price: {str(arr[1])}, Title: {str(arr[2])}, Url: {str(arr[3])}"
 
-        def Res():
-            global r
-            r = "Полученные результаты парсинга"
-            listbox = tk.Listbox(window, width=30, height=10)
-            listbox.pack(pady=20)
-            listbox1 = tk.Listbox(window, width=30, height=10)
-            listbox1.pack(pady=20)
+        def display_array(mylistbox):
+            # Очищаем Listbox перед добавлением новых данных  res[""]=[{},{}]    s=[ [ [],[],[] ],[ [],[] ] ]
+            mylistbox.delete(0, tk.END)
+            s=[[],[]]
+            for dic in result["https://gipermarketdom.ru/"]:
+                r=[]
+                for key in dic:
+                    r.append(dic[key])
+                s[0].append(r)
+            for dic in result["https://www.vodoparad.ru/"]:
+                r=[]
+                for key in dic:
+                    r.append(dic[key])
+                s[1].append(r)
 
-            while True:
-
-
-
-                def display_array(array, mylistbox):
-                    # Очищаем Listbox перед добавлением новых данных
-                    mylistbox.delete(0, tk.END)
-                    u=[]
-                    for dic in array:
-                        for key in dic:
-                            u.append(dic[key])
-                        mylistbox.insert(tk.END, ' '.join(map(str, u)))
-
-                display_array(result["https://gipermarketdom.ru/"], listbox)
-                display_array(result["https://www.vodoparad.ru/"], listbox1)
-
-                time.sleep(5)
-
-
-        
-
-
-        r="Подождите, производится парсинг"
+            for i in range(s[0].__len__()):
+                m1=display(s[0][i])
+                m2=display(s[1][i])
+                mylistbox.insert(tk.END,(m1, m2)[s[0][i][1]<=s[1][i][1]])
 
         window = tk.Tk()
+
+        r = "Полученные результаты парсинга"
 
         window.title(title)
 
         label = tk.Label(window, text=r)
         label.pack()
 
-        th=td.Thread(target=Res)
+        
+        listbox = tk.Listbox(window, width=200, height=10)
+        listbox.pack(pady=20)
 
-        th.start()
+        display_array(listbox)
 
         window.mainloop()
 
     def Button():
 
-        thread = td.Thread(target=MakeNewWindow)
-
-        thread.start()
-
         ParseFromShops()
+
+        MakeNewWindow()
 
         ResultToDB()
 
@@ -302,7 +294,6 @@ def ResultToDB():
 # url2="https://www.vodoparad.ru/"
 result = {"https://gipermarketdom.ru/":[], "https://www.vodoparad.ru/":[]}
 
-IsDone=False
 
 # Слава
 if os.path.exists('C:\\Program Files\\ChromeDriver\\chromedriver-win64\\chromedriver.exe'):
