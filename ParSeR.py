@@ -37,15 +37,15 @@ def DomSearch(url):
 
 
 
-    result = driver.find_element(By.CLASS_NAME, "content")
+    res = driver.find_element(By.CLASS_NAME, "content")
 
-    title = result.find_element(By.CSS_SELECTOR, "h1").get_attribute("innerHTML")
-    price = result.find_element(By.CSS_SELECTOR, "div.item_current_price").get_attribute("innerHTML")
+    title = res.find_element(By.CSS_SELECTOR, "h1").get_attribute("innerHTML")
+    price = res.find_element(By.CSS_SELECTOR, "div.item_current_price").get_attribute("innerHTML")
 
 
     if price and title:
     
-        info = {"Айди товара": url[0], "Цена товара": price, "Название товара": title, "Директория сайта": url}
+        info = {"Айди товара": url[0], "Цена товара": int(price), "Название товара": title, "Директория сайта": url[2]}
 
         result["https://gipermarketdom.ru/"].append(info)
     
@@ -62,60 +62,14 @@ def VodSearch(url):
 
     if price and title and url:
     
-        info = {"Айди товара": url[0], "Цена товара": price, "Название товара": title, "Директория сайта": url}
+        ar=price.split()
 
-        result["https://gipermarketdom.ru/"].append(info)    
-
-
-    
-    url = "https://gipermarketdom.ru/"
-    SelConnect(url)
-
-    soup = BeautifulSoup(driver.page_source, "lxml")
-
-    urlget = []
-
-    init=soup.find("ul", class_="menu-items-2")
-
-    categories = init.find_all("li", recursive=False)  # Use BeautifulSoup to find categories
-
-    for el in categories:
-        list1=el.find("ul")
-        options = list1.find_all("li", recursive=False)
-        for i in options:
-            list2=i.find("ul")
-            if list2:
-                var = list2.find_all("li", recursive=False)
-                for e in var:
-                    urlget.append(url + e.find("a").get("href")[1:])
-            else:
-                urlget.append(url + i.find("a").get("href"))
-
-    for site in urlget:
-        SelConnect(site)
-
-        soup = BeautifulSoup(driver.page_source, "lxml")
-        
+        price=int("".join(ar[:2]))
 
 
-        navbar = soup.find("div", class_="tb_block")
+        info = {"Айди товара": url[0], "Цена товара": price, "Название товара": title, "Директория сайта": url[3]}
 
-        if navbar:
-            pages=navbar.find_all("a", recursive=False)[1:-1]
-            
-            for page in pages:
-                num=page.contents
-                postfix=f"?page={num}&ff&sort_price=&in_stock=0&price_from=&price_to="
-
-                CollectDataFromGipermarketdom(site+postfix)
-        else:
-            CollectDataFromGipermarketdom(site)
-
-    ToDatabase(result)
-
-    
-
-    driver.quit()
+        result["https://www.vodoparad.ru/"].append(info)    
 
 def ParseFromShops():
 
@@ -145,7 +99,7 @@ def CreateDB(name="Goods.db"):
 
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS Shops (
-    ShopID SERIAL PRIMARY KEY,
+    ShopID INTEGER PRIMARY KEY,
     Name TEXT NOT NULL,
     Url TEXT NOT NULL
     )
@@ -165,7 +119,7 @@ INSERT INTO Shops (ShopID, Name, Url) VALUES (?, ?, ?) ON CONFLICT(ShopID) DO NO
 
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS Good (
-    GoodID SERIAL PRIMARY KEY AUTOINCREMENT,
+    GoodID INTEGER PRIMARY KEY AUTOINCREMENT,
     Name TEXT NOT NULL,
     DomUrl TEXT NOT NULL,
     VodUrl TEXT NOT NULL
@@ -174,11 +128,11 @@ INSERT INTO Shops (ShopID, Name, Url) VALUES (?, ?, ?) ON CONFLICT(ShopID) DO NO
 
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS Prices (
-    ID SERIAL PRIMARY KEY AUTOINCREMENT,
-    GoodID INT NOT NULL,
-    ShopID INT NOT NULL,
+    ID INTEGER PRIMARY KEY AUTOINCREMENT,
+    GoodID INTEGER NOT NULL,
+    ShopID INTEGER NOT NULL,
     Name TEXT NOT NULL,
-    Price INT NOT NULL,
+    Price INTEGER NOT NULL,
     CardUrl TEXT NOT NULL
     )
     ''')
@@ -199,13 +153,13 @@ def ResultToDB():
     
     for el in result["https://gipermarketdom.ru/"]:
         cursor.execute('''
-    INSERT INTO Prices (GoodCategoryID, ShopID, Name, Price, CardUrl) VALUES (?, ?, ?, ?, ?) ON CONFLICT(GoodCategoryID) DO NOTHING;
+    INSERT INTO Prices (GoodCategoryID, ShopID, Name, Price, CardUrl) VALUES (?, ?, ?, ?, ?);
     ''', (el["Айди товара"], 1, el["Название товара"], el["Цена товара"], el["Директория сайта"]))
         conn.commit()
 
     for el in result["https://www.vodoparad.ru/"]:
         cursor.execute('''
-    INSERT INTO Prices (GoodCategoryID, ShopID, Name, Price, CardUrl) VALUES (?, ?, ?, ?, ?) ON CONFLICT(GoodCategoryID) DO NOTHING;
+    INSERT INTO Prices (GoodCategoryID, ShopID, Name, Price, CardUrl) VALUES (?, ?, ?, ?, ?);
     ''', (el["Айди товара"], 2, el["Название товара"], el["Цена товара"], el["Директория сайта"]))
         conn.commit()
 
@@ -275,6 +229,8 @@ def Interface():
 
         ParseFromShops()
 
+        ResultToDB()
+
     root = tk.Tk()
     root.title("Парсер сайта")
 
@@ -319,13 +275,13 @@ def ResultToDB():
     
     for el in result["https://gipermarketdom.ru/"]:
         cursor.execute('''
-    INSERT INTO Prices (GoodID, ShopID, Name, Price, CardUrl) VALUES (?, ?, ?, ?, ?) ON CONFLICT(GoodID) DO NOTHING;
+    INSERT INTO Prices (GoodID, ShopID, Name, Price, CardUrl) VALUES (?, ?, ?, ?, ?);
     ''', (el["Айди товара"], 1, el["Название товара"], el["Цена товара"], el["Директория сайта"]))
         conn.commit()
 
     for el in result["https://www.vodoparad.ru/"]:
         cursor.execute('''
-    INSERT INTO Prices (GoodID, ShopID, Name, Price, CardUrl) VALUES (?, ?, ?, ?, ?) ON CONFLICT(GoodID) DO NOTHING;
+    INSERT INTO Prices (GoodID, ShopID, Name, Price, CardUrl) VALUES (?, ?, ?, ?, ?);
     ''', (el["Айди товара"], 2, el["Название товара"], el["Цена товара"], el["Директория сайта"]))
         conn.commit()
 
