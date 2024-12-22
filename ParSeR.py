@@ -135,7 +135,18 @@ INSERT INTO Shops (ShopID, Name, Url) VALUES (?, ?, ?) ON CONFLICT(ShopID) DO NO
     Name TEXT NOT NULL,
     Price INTEGER NOT NULL,
     CardUrl TEXT NOT NULL,
-    DateTime TEXT NOT NULL,
+    DateTime TEXT NOT NULL
+    )
+    ''')
+
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS Results (
+    ID INTEGER PRIMARY KEY AUTOINCREMENT,
+    GoodID INTEGER NOT NULL,
+    ShopID INTEGER NOT NULL,
+    Name TEXT NOT NULL,
+    Price INTEGER NOT NULL,
+    CardUrl TEXT NOT NULL,
     UNIQUE (GoodID, ShopID)
     )
     ''')
@@ -151,20 +162,6 @@ def SelConnect(site):
         except Exception as e:
             print(f"Error occurred: {e}, trying again after 5 seconds")
             time.sleep(5)
-
-def ResultToDB():
-    
-    for el in result["https://gipermarketdom.ru/"]:
-        cursor.execute('''
-    INSERT INTO Prices (GoodCategoryID, ShopID, Name, Price, CardUrl) VALUES (?, ?, ?, ?, ?) ON CONFLICT (GoodCategoryID, ShopID) DO NOTHING;
-    ''', (el["Айди товара"], 1, el["Название товара"], el["Цена товара"], el["Директория сайта"]))
-        conn.commit()
-
-    for el in result["https://www.vodoparad.ru/"]:
-        cursor.execute('''
-    INSERT INTO Prices (GoodCategoryID, ShopID, Name, Price, CardUrl) VALUES (?, ?, ?, ?, ?) ON CONFLICT (GoodCategoryID, ShopID) DO NOTHING;
-    ''', (el["Айди товара"], 2, el["Название товара"], el["Цена товара"], el["Директория сайта"]))
-        conn.commit()
 
 def Interface():
     
@@ -218,6 +215,7 @@ def Interface():
                 m1=display(s[0][i])
                 m2=display(s[1][i])
                 mylistbox.insert(tk.END,(m1, m2)[s[0][i][1]<=s[1][i][1]])
+
 
         window = tk.Tk()
 
@@ -293,18 +291,45 @@ def ResultToDB():
 
     # for i in g:
     #     r[i[1]]=i[2]
+
+    i=0
     
     for el in result["https://gipermarketdom.ru/"]:
         cursor.execute('''
     INSERT INTO Prices (GoodID, ShopID, Name, Price, CardUrl, DateTime) VALUES (?, ?, ?, ?, ?, ?);
     ''', (el["Айди товара"], 1, el["Название товара"], el["Цена товара"], el["Директория сайта"], el["Дата"]))
+
+        if el["Цена товара"] <= result["https://www.vodoparad.ru/"][i]["Цена товара"]:
+
+            cursor.execute('''
+        INSERT INTO Results (GoodID, ShopID, Name, Price, CardUrl) VALUES (?, ?, ?, ?, ?) ON CONFLICT(GoodID, ShopID) DO UPDATE SET Name = excluded.Name, Price = excluded.Price, CardUrl = excluded.CardUrl;
+        ''', (el["Айди товара"], 1, el["Название товара"], el["Цена товара"], el["Директория сайта"]))
+
+        i+=1
+        
         conn.commit()
+
+    i=0
 
     for el in result["https://www.vodoparad.ru/"]:
         cursor.execute('''
     INSERT INTO Prices (GoodID, ShopID, Name, Price, CardUrl, DateTime) VALUES (?, ?, ?, ?, ?, ?);
     ''', (el["Айди товара"], 2, el["Название товара"], el["Цена товара"], el["Директория сайта"], el["Дата"]))
+
+
+        if el["Цена товара"] <= result["https://gipermarketdom.ru/"][i]["Цена товара"]:
+
+            cursor.execute('''
+        INSERT INTO Results (GoodID, ShopID, Name, Price, CardUrl) VALUES (?, ?, ?, ?, ?) ON CONFLICT(GoodID, ShopID) DO UPDATE SET Name = excluded.Name, Price = excluded.Price, CardUrl = excluded.CardUrl;
+        ''', (el["Айди товара"], 1, el["Название товара"], el["Цена товара"], el["Директория сайта"]))
+
+        i+=1
+
         conn.commit()
+    
+
+    
+    conn.commit()
 
 
 

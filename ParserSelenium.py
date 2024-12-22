@@ -272,6 +272,17 @@ INSERT INTO Shops (Name, Url) VALUES (?, ?) ON CONFLICT(ShopID) DO NOTHING;
     )
     ''')
 
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS Results (
+    ID SERIAL PRIMARY KEY AUTOINCREMENT,
+    GoodCategoryID INT NOT NULL,
+    ShopID INT NOT NULL,
+    Name TEXT NOT NULL,
+    Price INT NOT NULL,
+    CardUrl TEXT NOT NULL
+    )
+    ''')
+
     conn.commit()
 
 def SelConnect(site):
