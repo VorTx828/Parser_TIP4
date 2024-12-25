@@ -83,11 +83,11 @@ def NeptunSearch(url):
     title = card.find_element(By.CSS_SELECTOR, "h1.page-title.section-title.product-title.js-title").get_attribute("innerHTML")
 
 
-    if price and title and url:
+    if price and title:
     
-        ar=price.split('"')
+        ar=price.split('<')[0].replace(" ", "")
 
-        price=int("".join(ar[0][:-1]))
+        price=int(ar)
 
 
         info = {"Айди товара": url[0], "Цена товара": price, "Название товара": title, "Дата": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), "Директория сайта": url[4]}
@@ -102,15 +102,15 @@ def GroheSearch(url):
     SelConnect(url[5])
 
 
-    price = driver.find_element(By.CSS_SELECTOR, "span.price product.product-price__price").get_attribute("#text")
+    price = driver.find_element(By.CSS_SELECTOR, "span.price.product.product-price__price").get_attribute("innerHTML")
     title = driver.find_element(By.CSS_SELECTOR, "h1.product-card__title.js-name").get_attribute("innerHTML")
 
 
-    if price and title and url:
+    if price and title:
     
-        ar=price.replace("&nbsp;","").replace('"', "")
+        ar=price.replace("&nbsp;","").split("<")[0]
 
-        price=int("".join(ar))
+        price=int(ar)
 
 
         info = {"Айди товара": url[0], "Цена товара": price, "Название товара": title, "Дата": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), "Директория сайта": url[5]}
@@ -238,6 +238,8 @@ def Interface():
             entry1.delete(0, tk.END)
             entry2.delete(0, tk.END)
             entry3.delete(0, tk.END)
+            entry4.delete(0, tk.END)
+            entry5.delete(0, tk.END)
 
             conn.commit()
 
@@ -245,35 +247,57 @@ def Interface():
         # messagebox.showinfo("Ввод", f"Вы ввели: {user_input}")  # Показываем введенные данные в 
 
     def MakeNewWindow(title="Результаты парсинга"):
-        def display(arr):
-            return f"GoodID: {str(arr[0])}, Price: {str(arr[1])}, Title: {str(arr[2])}, Time: {str(arr[3])}, Url: {str(arr[4])}"
+        def display(i):
+
+            #{"Айди товара": url[0], "Цена товара": price, "Название товара": title, "Дата": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), "Директория сайта": url[5]}
+
+            r1 = result["https://gipermarketdom.ru/"][i]["Цена товара"]
+            r2 = result["https://grohe-russia.shop"][i]["Цена товара"]
+            r3 = result["https://neptun66.ru"][i]["Цена товара"]
+            r4 = result["https://www.vodoparad.ru/"][i]["Цена товара"]
+
+
+            # match min(r1, r2, r3, r4):
+            #     case r1:
+            #         s=result["https://gipermarketdom.ru/"][i]
+            #         return f"GoodID: {str(s["Айди товара"])}, Price: {str(s["Цена товара"])}, Title: {str(s["Название товара"])}, Time: {str(s["Дата"])}, Url: {str(s["Директория сайта"])}"
+            #     case r2:
+            #         s=result["https://grohe-russia.shop"][i]
+            #         return f"GoodID: {str(s["Айди товара"])}, Price: {str(s["Цена товара"])}, Title: {str(s["Название товара"])}, Time: {str(s["Дата"])}, Url: {str(s["Директория сайта"])}"
+            #     case r3:
+            #         s=result["https://neptun66.ru"][i]
+            #         return f"GoodID: {str(s["Айди товара"])}, Price: {str(s["Цена товара"])}, Title: {str(s["Название товара"])}, Time: {str(s["Дата"])}, Url: {str(s["Директория сайта"])}"
+            #     case r4:
+            #         s=result["https://www.vodoparad.ru/"][i]
+            #         return f"GoodID: {str(s["Айди товара"])}, Price: {str(s["Цена товара"])}, Title: {str(s["Название товара"])}, Time: {str(s["Дата"])}, Url: {str(s["Директория сайта"])}"
+        
+            min_price = min(r1, r2, r3, r4)
+
+            if min_price == r1:
+                s = result["https://gipermarketdom.ru/"][i]
+            elif min_price == r2:
+                s = result["https://grohe-russia.shop"][i]
+            elif min_price == r3:
+                s = result["https://neptun66.ru"][i]
+            elif min_price == r4:
+                s = result["https://www.vodoparad.ru/"][i]
+
+            return f"GoodID: {str(s['Айди товара'])}, Price: {str(s['Цена товара'])}, Title: {str(s['Название товара'])}, Time: {str(s['Дата'])}, Url: {str(s['Директория сайта'])}"
 
         def on_click():
-                selected_index = listbox.curselection()
-                if selected_index: 
-                    selected_value = listbox.get(selected_index)
-                    r = selected_value.split("Url: ")[-1]
-                    SelConnect(r)
+            selected_index = listbox.curselection()
+            if selected_index: 
+                selected_value = listbox.get(selected_index)
+                r = selected_value.split("Url: ")[-1]
+                SelConnect(r)
 
         def display_array(mylistbox):
-            # Очищаем Listbox перед добавлением новых данных  res[""]=[{},{}]    s=[ [ [],[],[] ],[ [],[] ] ]
             mylistbox.delete(0, tk.END)
-            s=[[],[]]
-            for dic in result["https://gipermarketdom.ru/"]:
-                r=[]
-                for key in dic:
-                    r.append(dic[key])
-                s[0].append(r)
-            for dic in result["https://www.vodoparad.ru/"]:
-                r=[]
-                for key in dic:
-                    r.append(dic[key])
-                s[1].append(r)
+            for i in range(result["https://gipermarketdom.ru/"].__len__()):
+                mylistbox.insert(tk.END, display(i))
 
-            for i in range(s[0].__len__()):
-                m1=display(s[0][i])
-                m2=display(s[1][i])
-                mylistbox.insert(tk.END,(m1, m2)[s[0][i][1]<=s[1][i][1]])
+                
+                
 
 
         window = tk.Tk()
@@ -364,13 +388,7 @@ def Interface():
 
 def ResultToDB():
 
-    # cursor.execute("SELECT * FROM Good")
-    # g=cursor.fetchall()
 
-    # r={}
-
-    # for i in g:
-    #     r[i[1]]=i[2]
 
     i=0
     
@@ -406,6 +424,25 @@ def ResultToDB():
         i+=1
 
         conn.commit()
+
+
+    # i=0
+
+    # for el in result["https://neptun66.ru"]:
+    #     cursor.execute('''
+    # INSERT INTO Prices (GoodID, ShopID, Name, Price, CardUrl, DateTime) VALUES (?, ?, ?, ?, ?, ?);
+    # ''', (el["Айди товара"], 2, el["Название товара"], el["Цена товара"], el["Директория сайта"], el["Дата"]))
+
+
+    #     if el["Цена товара"] <= result["https://neptun66.ru"][i]["Цена товара"]:
+
+    #         cursor.execute('''
+    #     INSERT INTO Results (GoodID, ShopID, Name, Price, CardUrl) VALUES (?, ?, ?, ?, ?) ON CONFLICT(GoodID, ShopID) DO UPDATE SET Name = excluded.Name, Price = excluded.Price, CardUrl = excluded.CardUrl;
+    #     ''', (el["Айди товара"], 1, el["Название товара"], el["Цена товара"], el["Директория сайта"]))
+
+    #     i+=1
+
+    #     conn.commit()
     
 
     
@@ -419,12 +456,12 @@ result = {"https://gipermarketdom.ru/":[], "https://www.vodoparad.ru/":[], "http
 
 
 # Слава
-if os.path.exists('C:\\Program Files\\ChromeDriver\\chromedriver-win64\\chromedriver.exe'):
+if os.path.exists('chromedriver-win64\\chromedriver.exe'):
     # Set up Selenium with Chrome
     chrome_options = Options()
     # chrome_options.add_argument("--headless")  # Run in headless mode
     chrome_options.add_argument("--disable-extensions")
-    chrome_service = Service('C:\\Program Files\\ChromeDriver\\chromedriver-win64\\chromedriver.exe')  # Update with your path to chromedriver
+    chrome_service = Service('chromedriver-win64\\chromedriver.exe')  # Update with your path to chromedriver
     chrome_options.binary_location = "C:\\Program Files\\ChromeDriver\\chrome-win64\\chrome.exe"
     driver = webdriver.Chrome(service=chrome_service, options=chrome_options)
 # Тихон
