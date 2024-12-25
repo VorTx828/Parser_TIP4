@@ -386,9 +386,17 @@ def Interface():
 
     root.mainloop()
 
+def MinPrice(i):
+    r1 = result["https://gipermarketdom.ru/"][i]["Цена товара"]
+    r2 = result["https://grohe-russia.shop"][i]["Цена товара"]
+    r3 = result["https://neptun66.ru"][i]["Цена товара"]
+    r4 = result["https://www.vodoparad.ru/"][i]["Цена товара"]
+
+    return min(r1, r2, r3, r4)
+
 def ResultToDB():
 
-
+    
 
     i=0
     
@@ -397,7 +405,7 @@ def ResultToDB():
     INSERT INTO Prices (GoodID, ShopID, Name, Price, CardUrl, DateTime) VALUES (?, ?, ?, ?, ?, ?);
     ''', (el["Айди товара"], 1, el["Название товара"], el["Цена товара"], el["Директория сайта"], el["Дата"]))
 
-        if el["Цена товара"] <= result["https://www.vodoparad.ru/"][i]["Цена товара"]:
+        if el["Цена товара"] <= MinPrice(i):
 
             cursor.execute('''
         INSERT INTO Results (GoodID, ShopID, Name, Price, CardUrl) VALUES (?, ?, ?, ?, ?) ON CONFLICT(GoodID, ShopID) DO UPDATE SET Name = excluded.Name, Price = excluded.Price, CardUrl = excluded.CardUrl;
@@ -415,34 +423,53 @@ def ResultToDB():
     ''', (el["Айди товара"], 2, el["Название товара"], el["Цена товара"], el["Директория сайта"], el["Дата"]))
 
 
-        if el["Цена товара"] <= result["https://gipermarketdom.ru/"][i]["Цена товара"]:
+        if el["Цена товара"] <= MinPrice(i):
 
             cursor.execute('''
         INSERT INTO Results (GoodID, ShopID, Name, Price, CardUrl) VALUES (?, ?, ?, ?, ?) ON CONFLICT(GoodID, ShopID) DO UPDATE SET Name = excluded.Name, Price = excluded.Price, CardUrl = excluded.CardUrl;
-        ''', (el["Айди товара"], 1, el["Название товара"], el["Цена товара"], el["Директория сайта"]))
+        ''', (el["Айди товара"], 2, el["Название товара"], el["Цена товара"], el["Директория сайта"]))
 
         i+=1
 
         conn.commit()
 
 
-    # i=0
+    i=0
 
-    # for el in result["https://neptun66.ru"]:
-    #     cursor.execute('''
-    # INSERT INTO Prices (GoodID, ShopID, Name, Price, CardUrl, DateTime) VALUES (?, ?, ?, ?, ?, ?);
-    # ''', (el["Айди товара"], 2, el["Название товара"], el["Цена товара"], el["Директория сайта"], el["Дата"]))
+    for el in result["https://neptun66.ru"]:
+        cursor.execute('''
+    INSERT INTO Prices (GoodID, ShopID, Name, Price, CardUrl, DateTime) VALUES (?, ?, ?, ?, ?, ?);
+    ''', (el["Айди товара"], 3, el["Название товара"], el["Цена товара"], el["Директория сайта"], el["Дата"]))
 
 
-    #     if el["Цена товара"] <= result["https://neptun66.ru"][i]["Цена товара"]:
+        if el["Цена товара"] <= MinPrice(i):
 
-    #         cursor.execute('''
-    #     INSERT INTO Results (GoodID, ShopID, Name, Price, CardUrl) VALUES (?, ?, ?, ?, ?) ON CONFLICT(GoodID, ShopID) DO UPDATE SET Name = excluded.Name, Price = excluded.Price, CardUrl = excluded.CardUrl;
-    #     ''', (el["Айди товара"], 1, el["Название товара"], el["Цена товара"], el["Директория сайта"]))
+            cursor.execute('''
+        INSERT INTO Results (GoodID, ShopID, Name, Price, CardUrl) VALUES (?, ?, ?, ?, ?) ON CONFLICT(GoodID, ShopID) DO UPDATE SET Name = excluded.Name, Price = excluded.Price, CardUrl = excluded.CardUrl;
+        ''', (el["Айди товара"], 3, el["Название товара"], el["Цена товара"], el["Директория сайта"]))
 
-    #     i+=1
+        i+=1
 
-    #     conn.commit()
+        conn.commit()
+
+    i=0
+
+
+    for el in result["https://www.vodoparad.ru/"]:
+        cursor.execute('''
+    INSERT INTO Prices (GoodID, ShopID, Name, Price, CardUrl, DateTime) VALUES (?, ?, ?, ?, ?, ?);
+    ''', (el["Айди товара"], 4, el["Название товара"], el["Цена товара"], el["Директория сайта"], el["Дата"]))
+
+
+        if el["Цена товара"] <= MinPrice(i):
+
+            cursor.execute('''
+        INSERT INTO Results (GoodID, ShopID, Name, Price, CardUrl) VALUES (?, ?, ?, ?, ?) ON CONFLICT(GoodID, ShopID) DO UPDATE SET Name = excluded.Name, Price = excluded.Price, CardUrl = excluded.CardUrl;
+        ''', (el["Айди товара"], 4, el["Название товара"], el["Цена товара"], el["Директория сайта"]))
+
+        i+=1
+
+        conn.commit()
     
 
     
