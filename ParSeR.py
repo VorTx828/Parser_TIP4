@@ -72,6 +72,53 @@ def VodSearch(url):
 
         result["https://www.vodoparad.ru/"].append(info)    
 
+def NeptunSearch(url):
+    SelConnect(url[4])
+
+
+
+    card = driver.find_element(By.CSS_SELECTOR, "div.product-main-col.flex-row-item")
+
+    price = card.find_element(By.CSS_SELECTOR, "div.product-price").get_attribute("innerHTML")
+    title = card.find_element(By.CSS_SELECTOR, "h1.page-title.section-title.product-title.js-title").get_attribute("innerHTML")
+
+
+    if price and title and url:
+    
+        ar=price.split('"')
+
+        price=int("".join(ar[0][:-1]))
+
+
+        info = {"Айди товара": url[0], "Цена товара": price, "Название товара": title, "Дата": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), "Директория сайта": url[4]}
+
+        result["https://neptun66.ru"].append(info)  
+
+def GroheSearch(url):
+
+    #Ванна акриловая Tira 1700х700мм
+
+
+    SelConnect(url[5])
+
+
+    price = driver.find_element(By.CSS_SELECTOR, "span.price product.product-price__price").get_attribute("#text")
+    title = driver.find_element(By.CSS_SELECTOR, "h1.product-card__title.js-name").get_attribute("innerHTML")
+
+
+    if price and title and url:
+    
+        ar=price.replace("&nbsp;","").replace('"', "")
+
+        price=int("".join(ar))
+
+
+        info = {"Айди товара": url[0], "Цена товара": price, "Название товара": title, "Дата": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), "Директория сайта": url[5]}
+
+        result["https://grohe-russia.shop"].append(info) 
+
+
+
 def ParseFromShops():
 
     cursor.execute("SELECT * FROM Good")
@@ -84,9 +131,10 @@ def ParseFromShops():
 
         VodSearch(g)
 
-    global IsDone
+        NeptunSearch(g)
 
-    IsDone=True
+        GroheSearch(g)
+
        
 def CreateDB(name="Goods.db"):
     global conn
@@ -115,6 +163,15 @@ INSERT INTO Shops (ShopID, Name, Url) VALUES (?, ?, ?) ON CONFLICT(ShopID) DO NO
     cursor.execute('''
 INSERT INTO Shops (ShopID, Name, Url) VALUES (?, ?, ?) ON CONFLICT(ShopID) DO NOTHING;
 ''', (2, "vodoparad", "https://www.vodoparad.ru/"))
+
+
+    cursor.execute('''
+INSERT INTO Shops (ShopID, Name, Url) VALUES (?, ?, ?) ON CONFLICT(ShopID) DO NOTHING;
+''', (3, "neptun66", "https://neptun66.ru/"))
+
+    cursor.execute('''
+INSERT INTO Shops (ShopID, Name, Url) VALUES (?, ?, ?) ON CONFLICT(ShopID) DO NOTHING;
+''', (4, "grohe", "https://grohe-russia.shop/"))
     
 
 
@@ -123,7 +180,9 @@ INSERT INTO Shops (ShopID, Name, Url) VALUES (?, ?, ?) ON CONFLICT(ShopID) DO NO
     GoodID INTEGER PRIMARY KEY AUTOINCREMENT,
     Name TEXT NOT NULL,
     DomUrl TEXT NOT NULL,
-    VodUrl TEXT NOT NULL
+    VodUrl TEXT NOT NULL,
+    NepUrl TEXT NOT NULL,
+    GroUrl TEXT NOT NULL
     )
     ''')
 
@@ -172,8 +231,8 @@ def Interface():
 
         if entry1.get():
             cursor.execute('''
-    INSERT INTO Good (Name, DomUrl, VodUrl) VALUES (?, ?, ?)
-    ''', (entry1.get(), entry2.get(), entry3.get()))
+    INSERT INTO Good (Name, DomUrl, VodUrl, NepUrl, GroUrl) VALUES (?, ?, ?, ?, ?)
+    ''', (entry1.get(), entry2.get(), entry3.get(), entry4.get(), entry5.get()))
 
 
             entry1.delete(0, tk.END)
@@ -260,15 +319,36 @@ def Interface():
     labe2 = tk.Label(root, text="Введите данные (1 строка - название товара, 2 строка - ссылка на товар на сайте Dom, 3 строка - ссылка на товар на сайте Vod)")
     labe2.pack()
 
-
+    labe3 = tk.Label(root, text="Название товара")
+    labe3.pack()
+    
     entry1 = tk.Entry(root)
     entry1.pack(pady=10)
+
+    labe4 = tk.Label(root, text="Ссылка на товар на сайте Dom")
+    labe4.pack()
 
     entry2 = tk.Entry(root)
     entry2.pack(pady=10)
 
+    labe5 = tk.Label(root, text="Ссылка на товар на сайте Vod")
+    labe5.pack()
+
     entry3 = tk.Entry(root)
     entry3.pack(pady=10)
+
+    labe6 = tk.Label(root, text="Ссылка на товар на сайте Nep")
+    labe6.pack()
+
+    entry4 = tk.Entry(root)
+    entry4.pack(pady=10)
+
+
+    labe7 = tk.Label(root, text="Ссылка на товар на сайте Grohe")
+    labe7.pack()
+
+    entry5 = tk.Entry(root)
+    entry5.pack(pady=10)
 
 
     
@@ -335,7 +415,7 @@ def ResultToDB():
 
 # url = "https://gipermarketdom.ru/"
 # url2="https://www.vodoparad.ru/"
-result = {"https://gipermarketdom.ru/":[], "https://www.vodoparad.ru/":[]}
+result = {"https://gipermarketdom.ru/":[], "https://www.vodoparad.ru/":[], "https://neptun66.ru":[], "https://grohe-russia.shop": []}
 
 
 # Слава
