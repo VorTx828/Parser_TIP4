@@ -16,6 +16,7 @@ import time
 import sqlite3
 import tkinter as tk
 import threading as td
+from tkinter import messagebox
 
 import time
 
@@ -231,22 +232,27 @@ def Interface():
 
     def get_input():
         # Получаем данные из поля ввода
+        product_name = entry_productName.get().strip()
+        link_dom = entry_linkDom.get().strip()
+        link_vod = entry_linkVod.get().strip()
+        link_nep = entry_linkNep.get().strip()
+        link_grohe = entry_linkGrohe.get().strip()
+        
+        if not product_name or not link_dom or not link_vod or not link_nep or not link_grohe:
+            messagebox.showwarning("Парсер сайта", "Заполните все поля.")
+            return
+        
+        cursor.execute('''
+            INSERT INTO Good (Name, DomUrl, VodUrl, NepUrl, GroUrl) VALUES (?, ?, ?, ?, ?)
+            ''', (product_name, link_dom, link_vod, link_nep, link_grohe))
+        
+        entry_productName.delete(0, tk.END)
+        entry_linkDom.delete(0, tk.END)
+        entry_linkVod.delete(0, tk.END)
+        entry_linkNep.delete(0, tk.END)
+        entry_linkGrohe.delete(0, tk.END)
 
-
-        if entry_productName.get():
-            cursor.execute('''
-    INSERT INTO Good (Name, DomUrl, VodUrl, NepUrl, GroUrl) VALUES (?, ?, ?, ?, ?)
-    ''', (entry_productName.get(), entry_linkDom.get(), entry_linkVod.get(), entry_linkNep.get(), entry_linkGrohe.get()))
-
-
-            entry_productName.delete(0, tk.END)
-            entry_linkDom.delete(0, tk.END)
-            entry_linkVod.delete(0, tk.END)
-            entry_linkNep.delete(0, tk.END)
-            entry_linkGrohe.delete(0, tk.END)
-
-            conn.commit()
-
+        conn.commit()
 
         # messagebox.showinfo("Ввод", f"Вы ввели: {user_input}")  # Показываем введенные данные в 
 
