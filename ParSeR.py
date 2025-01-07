@@ -455,7 +455,7 @@ def ResultToDB():
     i=0
 
 
-    for el in result["https://www.vodoparad.ru/"]:
+    for el in result["https://grohe-russia.shop"]:
         cursor.execute('''
     INSERT INTO Prices (GoodID, ShopID, Name, Price, CardUrl, DateTime) VALUES (?, ?, ?, ?, ?, ?);
     ''', (el["Айди товара"], 4, el["Название товара"], el["Цена товара"], el["Директория сайта"], el["Дата"]))
