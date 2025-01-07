@@ -229,17 +229,17 @@ def Interface():
         # Получаем данные из поля ввода
 
 
-        if entry1.get():
+        if entry_productName.get():
             cursor.execute('''
     INSERT INTO Good (Name, DomUrl, VodUrl, NepUrl, GroUrl) VALUES (?, ?, ?, ?, ?)
-    ''', (entry1.get(), entry2.get(), entry3.get(), entry4.get(), entry5.get()))
+    ''', (entry_productName.get(), entry_linkDom.get(), entry_linkVod.get(), entry_linkNep.get(), entry_linkGrohe.get()))
 
 
-            entry1.delete(0, tk.END)
-            entry2.delete(0, tk.END)
-            entry3.delete(0, tk.END)
-            entry4.delete(0, tk.END)
-            entry5.delete(0, tk.END)
+            entry_productName.delete(0, tk.END)
+            entry_linkDom.delete(0, tk.END)
+            entry_linkVod.delete(0, tk.END)
+            entry_linkNep.delete(0, tk.END)
+            entry_linkGrohe.delete(0, tk.END)
 
             conn.commit()
 
@@ -335,54 +335,51 @@ def Interface():
 
     root = tk.Tk()
     root.title("Парсер сайта")
+    root.geometry("900x560")
+    root.resizable(width=False, height=False)
 
-    label = tk.Label(root, text="Выберите опцию")
-    label.pack()
+    frame_header = tk.Frame(root, bg = "#2A2927")
+    frame_header.pack(anchor=tk.N,fill=tk.X)
 
+    label_header1 = tk.Label(frame_header, text="Выберите опцию", bg="#2A2927", fg="#CECBC6", font=("Montserrat", 24, "bold"))
+    label_header1.pack(anchor=tk.W, padx=40, pady=(20,0))
 
-    labe2 = tk.Label(root, text="Введите данные (1 строка - название товара, 2 строка - ссылка на товар на сайте Dom, 3 строка - ссылка на товар на сайте Vod)")
-    labe2.pack()
+    label_header2 = tk.Label(frame_header, text="Введите данные", bg="#2A2927", fg="#CECBC6", font=("Montserrat", 12))
+    label_header2.pack(anchor=tk.W, padx=40, pady=(0,20))
 
-    labe3 = tk.Label(root, text="Название товара")
-    labe3.pack()
+    frame_main = tk.Frame(root, bg="#CECBC6")
+    frame_main.pack(fill=tk.BOTH, ipady=50)
+
+    labelFrame_productName = tk.LabelFrame(frame_main, text="Название товара", font=("Montserrat",8), bg="#CECBC6", bd="0")
+    labelFrame_productName.pack(anchor=tk.W, padx=40, pady=(40,5))
+    entry_productName = tk.Entry(labelFrame_productName, width=70)
+    entry_productName.pack()
+
+    labelFrame_linkDom = tk.LabelFrame(frame_main, text="Ссылка на товар на сайте Dom", font=("Montserrat",8), bg="#CECBC6", bd="0")
+    labelFrame_linkDom.pack(anchor=tk.W, padx=40, pady=5)
+    entry_linkDom = tk.Entry(labelFrame_linkDom, width=70)
+    entry_linkDom.pack()
+
+    labelFrame_linkVod = tk.LabelFrame(frame_main, text="Ссылка на товар на сайте Vod", font=("Montserrat",8), bg="#CECBC6", bd="0")
+    labelFrame_linkVod.pack(anchor=tk.W, padx=40, pady=5)
+    entry_linkVod = tk.Entry(labelFrame_linkVod, width=70)
+    entry_linkVod.pack()
+
+    labelFrame_linkNep = tk.LabelFrame(frame_main, text="Ссылка на товар на сайте Nep", font=("Montserrat",8), bg="#CECBC6", bd="0")
+    labelFrame_linkNep.pack(anchor=tk.W, padx=40, pady=5)
+    entry_linkNep = tk.Entry(labelFrame_linkNep, width=70)
+    entry_linkNep.pack()
+
+    labelFrame_linkGrohe = tk.LabelFrame(frame_main, text="Ссылка на товар на сайте Grohe", font=("Montserrat",8), bg="#CECBC6", bd="0")
+    labelFrame_linkGrohe.pack(anchor=tk.W, padx=40, pady=5)
+    entry_linkGrohe = tk.Entry(labelFrame_linkGrohe, width=70)
+    entry_linkGrohe.pack()
     
-    entry1 = tk.Entry(root)
-    entry1.pack(pady=10)
+    button_get = tk.Button(frame_main, text="Добавить название товара и ссылку", command=get_input, width=35, bd=0)
+    button_get.pack(anchor=tk.E, padx=40, pady=(50,5))
 
-    labe4 = tk.Label(root, text="Ссылка на товар на сайте Dom")
-    labe4.pack()
-
-    entry2 = tk.Entry(root)
-    entry2.pack(pady=10)
-
-    labe5 = tk.Label(root, text="Ссылка на товар на сайте Vod")
-    labe5.pack()
-
-    entry3 = tk.Entry(root)
-    entry3.pack(pady=10)
-
-    labe6 = tk.Label(root, text="Ссылка на товар на сайте Nep")
-    labe6.pack()
-
-    entry4 = tk.Entry(root)
-    entry4.pack(pady=10)
-
-
-    labe7 = tk.Label(root, text="Ссылка на товар на сайте Grohe")
-    labe7.pack()
-
-    entry5 = tk.Entry(root)
-    entry5.pack(pady=10)
-
-
-    
-    button = tk.Button(root, text="Добавить название товара и ссылку", command=get_input)
-    button.pack(pady=10)
-
-    button = tk.Button(root, text="Перейти к результатам", command=Button)
-    button.pack(pady=10)
-
-
+    button_run = tk.Button(frame_main, text="Перейти к результатам", command=Button, width=35, bd=0, bg="#2A2927", fg="#CECBC6")
+    button_run.pack(anchor=tk.E, padx=40, pady=(5,10))
 
     root.mainloop()
 
