@@ -121,6 +121,10 @@ def GroheSearch(url):
 
 def ParseFromShops():
 
+    global result
+
+    result = {"https://gipermarketdom.ru/":[], "https://www.vodoparad.ru/":[], "https://neptun66.ru":[], "https://grohe-russia.shop": []}
+
     cursor.execute("SELECT * FROM Good")
     goods=cursor.fetchall()
 
