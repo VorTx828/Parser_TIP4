@@ -306,22 +306,27 @@ def Interface():
 
         window = tk.Tk()
 
-        r = "Полученные результаты парсинга (с минимальными ценами)"
+        frame_header = tk.Frame(window, bg = "#2A2927")
+        frame_header.pack(anchor=tk.N,fill=tk.X)
 
         window.title(title)
 
-        label = tk.Label(window, text=r)
-        label.pack()
+        label_header1 = tk.Label(frame_header, text="Полученные результаты парсинга", bg="#2A2927", fg="#CECBC6", font=("Montserrat", 24, "bold"))
+        label_header1.pack(anchor=tk.W, padx=40, pady=(20,0))
 
+        label_header2 = tk.Label(frame_header, text="С минимальными ценами", bg="#2A2927", fg="#CECBC6", font=("Montserrat", 12))
+        label_header2.pack(anchor=tk.W, padx=40, pady=(0,20))
         
-        listbox = tk.Listbox(window, width=200, height=10)
+        frame_main = tk.Frame(window, bg="#CECBC6")
+        frame_main.pack(fill=tk.BOTH, expand=True)
+
+        listbox = tk.Listbox(frame_main, width=200, height=10)
         listbox.pack(pady=20)
 
         display_array(listbox)
 
-
-        button = tk.Button(window, text="Перейти к выбранному элементу", command=on_click)
-        button.pack(pady=20)
+        button_go = tk.Button(frame_main, text="Перейти к выбранному элементу", command=on_click, width=35, bd=0, bg="#2A2927", fg="#CECBC6")
+        button_go.pack(anchor=tk.S, pady=40)
 
         window.mainloop()
 
