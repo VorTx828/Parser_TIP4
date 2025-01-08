@@ -118,13 +118,28 @@ def GroheSearch(url):
 
         result["https://grohe-russia.shop"].append(info) 
 
+def DomotSearch(url):
+    SelConnect(url[6])
 
+    price = driver.find_element(By.CSS_SELECTOR, "span.price_value").get_attribute("innerHTML")
+    title = driver.find_element(By.CSS_SELECTOR, "h1#pagetitle").get_attribute("innerHTML")
+
+    if price and title:
+    
+        ar=price.replace("&nbsp;","").split("<")[0]
+
+        price=int(ar)
+
+
+        info = {"Айди товара": url[0], "Цена товара": price, "Название товара": title, "Дата": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), "Директория сайта": url[5]}
+
+        result["https://www.domotex.ru/"].append(info) 
 
 def ParseFromShops():
 
     global result
 
-    result = {"https://gipermarketdom.ru/":[], "https://www.vodoparad.ru/":[], "https://neptun66.ru":[], "https://grohe-russia.shop": []}
+    result = {"https://gipermarketdom.ru/":[], "https://www.vodoparad.ru/":[], "https://neptun66.ru":[], "https://grohe-russia.shop": [], "https://www.domotex.ru/":[]}
 
     cursor.execute("SELECT * FROM Good")
     goods=cursor.fetchall()
@@ -139,6 +154,8 @@ def ParseFromShops():
         NeptunSearch(g)
 
         GroheSearch(g)
+
+        DomotSearch(g)
 
        
 def CreateDB(name="Goods.db"):
@@ -178,7 +195,9 @@ INSERT INTO Shops (ShopID, Name, Url) VALUES (?, ?, ?) ON CONFLICT(ShopID) DO NO
 INSERT INTO Shops (ShopID, Name, Url) VALUES (?, ?, ?) ON CONFLICT(ShopID) DO NOTHING;
 ''', (4, "grohe", "https://grohe-russia.shop/"))
     
-
+    cursor.execute('''
+INSERT INTO Shops (ShopID, Name, Url) VALUES (?, ?, ?) ON CONFLICT(ShopID) DO NOTHING;
+''', (5, "domotex", "https://www.domotex.ru/"))
 
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS Good (
@@ -187,7 +206,8 @@ INSERT INTO Shops (ShopID, Name, Url) VALUES (?, ?, ?) ON CONFLICT(ShopID) DO NO
     DomUrl TEXT NOT NULL,
     VodUrl TEXT NOT NULL,
     NepUrl TEXT NOT NULL,
-    GroUrl TEXT NOT NULL
+    GroUrl TEXT NOT NULL,
+    DomoUrl TEXT NOT NULL
     )
     ''')
 
@@ -237,20 +257,22 @@ def Interface():
         link_vod = entry_linkVod.get().strip()
         link_nep = entry_linkNep.get().strip()
         link_grohe = entry_linkGrohe.get().strip()
+        link_domotex = entry_linkDomotex.get().strip()
         
-        if not product_name or not link_dom or not link_vod or not link_nep or not link_grohe:
+        if not product_name or not link_dom or not link_vod or not link_nep or not link_grohe or not link_domotex:
             messagebox.showwarning("Парсер сайта", "Заполните все поля.")
             return
         
         cursor.execute('''
-            INSERT INTO Good (Name, DomUrl, VodUrl, NepUrl, GroUrl) VALUES (?, ?, ?, ?, ?)
-            ''', (product_name, link_dom, link_vod, link_nep, link_grohe))
+            INSERT INTO Good (Name, DomUrl, VodUrl, NepUrl, GroUrl, DomoUrl) VALUES (?, ?, ?, ?, ?, ?)
+            ''', (product_name, link_dom, link_vod, link_nep, link_grohe, link_domotex))
         
         entry_productName.delete(0, tk.END)
         entry_linkDom.delete(0, tk.END)
         entry_linkVod.delete(0, tk.END)
         entry_linkNep.delete(0, tk.END)
         entry_linkGrohe.delete(0, tk.END)
+        entry_linkDomotex.delete(0, tk.END)
 
         conn.commit()
 
@@ -265,7 +287,7 @@ def Interface():
             r2 = result["https://grohe-russia.shop"][i]["Цена товара"]
             r3 = result["https://neptun66.ru"][i]["Цена товара"]
             r4 = result["https://www.vodoparad.ru/"][i]["Цена товара"]
-
+            r5 = result["https://www.domotex.ru/"][i]["Цена товара"]
 
             # match min(r1, r2, r3, r4):
             #     case r1:
@@ -281,7 +303,7 @@ def Interface():
             #         s=result["https://www.vodoparad.ru/"][i]
             #         return f"GoodID: {str(s["Айди товара"])}, Price: {str(s["Цена товара"])}, Title: {str(s["Название товара"])}, Time: {str(s["Дата"])}, Url: {str(s["Директория сайта"])}"
         
-            min_price = min(r1, r2, r3, r4)
+            min_price = min(r1, r2, r3, r4, r5)
 
             if min_price == r1:
                 s = result["https://gipermarketdom.ru/"][i]
@@ -291,6 +313,8 @@ def Interface():
                 s = result["https://neptun66.ru"][i]
             elif min_price == r4:
                 s = result["https://www.vodoparad.ru/"][i]
+            elif min_price == r5:
+                s = result["https://www.domotex.ru/"][i]
 
             return f"GoodID: {str(s['Айди товара'])}, Price: {str(s['Цена товара'])}, Title: {str(s['Название товара'])}, Time: {str(s['Дата'])}, Url: {str(s['Директория сайта'])}"
 
@@ -389,6 +413,12 @@ def Interface():
     labelFrame_linkGrohe.pack(anchor=tk.W, padx=40, pady=5)
     entry_linkGrohe = tk.Entry(labelFrame_linkGrohe, width=70)
     entry_linkGrohe.pack()
+
+    labelFrame_linkDomotex = tk.LabelFrame(frame_main, text="Ссылка на товар на сайте Domotex", font=("Montserrat",8), bg="#CECBC6", bd="0")
+    labelFrame_linkDomotex.pack(anchor=tk.W, padx=40, pady=5)
+    entry_linkDomotex = tk.Entry(labelFrame_linkDomotex, width=70)
+    entry_linkDomotex.pack()
+    
     
     button_get = tk.Button(frame_main, text="Добавить название товара и ссылку", command=get_input, width=35, bd=0)
     button_get.pack(anchor=tk.E, padx=40, pady=(50,5))
@@ -403,8 +433,9 @@ def MinPrice(i):
     r2 = result["https://grohe-russia.shop"][i]["Цена товара"]
     r3 = result["https://neptun66.ru"][i]["Цена товара"]
     r4 = result["https://www.vodoparad.ru/"][i]["Цена товара"]
+    r5 = result["https://www.domotex.ru/"][i]["Цена товара"]
 
-    return min(r1, r2, r3, r4)
+    return min(r1, r2, r3, r4, r5)
 
 def ResultToDB():
 
@@ -483,7 +514,23 @@ def ResultToDB():
 
         conn.commit()
     
+    i=0
 
+    for el in result["https://www.domotex.ru/"]:
+        cursor.execute('''
+    INSERT INTO Prices (GoodID, ShopID, Name, Price, CardUrl, DateTime) VALUES (?, ?, ?, ?, ?, ?);
+    ''', (el["Айди товара"], 5, el["Название товара"], el["Цена товара"], el["Директория сайта"], el["Дата"]))
+
+
+        if el["Цена товара"] <= MinPrice(i):
+
+            cursor.execute('''
+        INSERT INTO Results (GoodID, ShopID, Name, Price, CardUrl) VALUES (?, ?, ?, ?, ?) ON CONFLICT(GoodID, ShopID) DO UPDATE SET Name = excluded.Name, Price = excluded.Price, CardUrl = excluded.CardUrl;
+        ''', (el["Айди товара"], 5, el["Название товара"], el["Цена товара"], el["Директория сайта"]))
+
+        i+=1
+
+        conn.commit()
     
     conn.commit()
 
@@ -491,7 +538,7 @@ def ResultToDB():
 
 # url = "https://gipermarketdom.ru/"
 # url2="https://www.vodoparad.ru/"
-result = {"https://gipermarketdom.ru/":[], "https://www.vodoparad.ru/":[], "https://neptun66.ru":[], "https://grohe-russia.shop": []}
+# result = {"https://gipermarketdom.ru/":[], "https://www.vodoparad.ru/":[], "https://neptun66.ru":[], "https://grohe-russia.shop": []}
 
 
 # Слава
