@@ -146,15 +146,14 @@ def ParseFromShops():
 
 
     for g in goods:
-
         DomSearch(g)
-
+    for g in goods:
         VodSearch(g)
-
+    for g in goods:
         NeptunSearch(g)
-
+    for g in goods:
         GroheSearch(g)
-
+    for g in goods:
         DomotSearch(g)
 
        
